@@ -1,0 +1,66 @@
+GDB inicial:
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./a...
+(gdb) run
+Starting program: /home/giovana/ed/pa03/c13/a 
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[Inferior 1 (process 23091) exited normally]
+
+
+Valgrind inicial:
+==23099== Memcheck, a memory error detector
+==23099== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==23099== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==23099== Command: ./a
+==23099== 
+==23099== 
+==23099== HEAP SUMMARY:
+==23099==     in use at exit: 35 bytes in 2 blocks
+==23099==   total heap usage: 3 allocs, 1 frees, 47 bytes allocated
+==23099== 
+==23099== 16 bytes in 1 blocks are definitely lost in loss record 1 of 2
+==23099==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==23099==    by 0x1091A6: main (c13.c:11)
+==23099== 
+==23099== 19 bytes in 1 blocks are definitely lost in loss record 2 of 2
+==23099==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==23099==    by 0x10917E: main (c13.c:8)
+==23099== 
+==23099== LEAK SUMMARY:
+==23099==    definitely lost: 35 bytes in 2 blocks
+==23099==    indirectly lost: 0 bytes in 0 blocks
+==23099==      possibly lost: 0 bytes in 0 blocks
+==23099==    still reachable: 0 bytes in 0 blocks
+==23099==         suppressed: 0 bytes in 0 blocks
+==23099== 
+==23099== For lists of detected and suppressed errors, rerun with: -s
+
+
+Nesse caso, o problema do código, detectado pelo Valgrind, é que há vazamento da memória 2 vezes, em um bloco de 16 bytes e outro de 19 bytes. Quando o ponteiro p recebe um novo endereço de memória, seu endereço antigo deve ser liberado antes, o que não ocorreu no código quando a variável foi alocada com 16 e 19 bytes. Assim, para solucionar o problema é necessário dar free(p) antes de endereçá-lo novamente:
+
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./a...
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[Inferior 1 (process 23279) exited normally]
+
+==23284== Memcheck, a memory error detector
+==23284== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==23284== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==23284== Command: ./a
+==23284== 
+==23284== 
+==23284== HEAP SUMMARY:
+==23284==     in use at exit: 0 bytes in 0 blocks
+==23284==   total heap usage: 3 allocs, 3 frees, 47 bytes allocated
+==23284== 
+==23284== All heap blocks were freed -- no leaks are possible
+==23284== 
+==23284== For lists of detected and suppressed errors, rerun with: -s
+==23284== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+

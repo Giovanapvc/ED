@@ -1,0 +1,89 @@
+GDB inicial:
+Reading symbols from ./a...
+(gdb) break c8.c:9
+Ponto de parada 1 at 0x11bc: file c8.c, line 9.
+(gdb) run
+
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+Breakpoint 1, main () at c8.c:9
+9	        *(destination + i) = *(source + i); //Look at the last iteration.
+(gdb) print *(destination + i)
+$1 = 0 '\000'
+(gdb) continue
+Continuing.
+
+Breakpoint 1, main () at c8.c:9
+9	        *(destination + i) = *(source + i); //Look at the last iteration.
+(gdb) *(destination + i)
+command indefinido: "". Tente "help".
+(gdb) print *(destination + i)
+$2 = 0 '\000'
+(gdb) continue
+Continuing.
+Breakpoint 1, main () at c8.c:9
+9	        *(destination + i) = *(source + i); //Look at the last iteration.
+(gdb) print *(source + i)
+$4 = 0 '\000'
+(gdb) run
+The program being debugged has been started already.
+Start it from the beginning? (y or n) y
+
+
+Reading symbols from ./a...
+(gdb) run
+
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[Inferior 1 (process 15039) exited normally]
+(gdb) quit
+ 
+ Valgrind inicial:
+==15057== Memcheck, a memory error detector
+==15057== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==15057== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==15057== Command: ./a
+==15057== 
+==15057== Invalid read of size 1
+==15057==    at 0x1091D2: main (c8.c:9)
+==15057==  Address 0x4a9e0ba is 0 bytes after a block of size 26 alloc'd
+==15057==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==15057==    by 0x1091B1: main (c8.c:6)
+==15057== 
+==15057== 
+==15057== HEAP SUMMARY:
+==15057==     in use at exit: 0 bytes in 0 blocks
+==15057==   total heap usage: 2 allocs, 2 frees, 53 bytes allocated
+==15057== 
+==15057== All heap blocks were freed -- no leaks are possible
+==15057== 
+==15057== For lists of detected and suppressed errors, rerun with: -s
+==15057== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 0 from 0)
+
+
+O programa apresenta erros detectados pelo valgrind, onde há uma leitura inválida de um espaço de memória: esse erro aparece ao ler a última iteração do loop for, uma vez que o loop é executado 27 vezes, porém há 26 espaços de memória alocados no array de caracteres "source", assim há uma tentativa de acesso a uma memória inválida. Para corrigir esse erro, o loop deve ser executado 26 vezes. Outro probelma é que a memória de "source" não foi inicializada, então sua cópia para "destination" não faria sentido, é necessário criar um loop para preencher a memória de source, com algum caractere, antes da cópia:
+
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from .//a...
+(gdb) run
+
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[Inferior 1 (process 15405) exited normally]
+
+
+==15415== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==15415== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==15415== Command: ./a
+==15415== 
+==15415== 
+==15415== HEAP SUMMARY:
+==15415==     in use at exit: 0 bytes in 0 blocks
+==15415==   total heap usage: 2 allocs, 2 frees, 53 bytes allocated
+==15415== 
+==15415== All heap blocks were freed -- no leaks are possible
+==15415== 
+==15415== For lists of detected and suppressed errors, rerun with: -s
+==15415== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+

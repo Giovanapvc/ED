@@ -1,0 +1,93 @@
+Programa 1 - gdb
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./a...
+(gdb) break 9
+Ponto de parada 1 at 0x11a1: file c1.c, line 9.
+(gdb) run
+
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+Breakpoint 1, main (argc=1, argv=0x7fffffffde88) at c1.c:9
+9	    a[i] = i;
+(gdb) print a
+$1 = (int *) 0x5555555592a0
+(gdb) continue
+Continuing.
+Breakpoint 1, main (argc=1, argv=0x7fffffffde88) at c1.c:9
+9	    a[i] = i;
+(gdb) print a
+$2 = (int *) 0x5555555592a0
+(gdb) continue
+Continuing.
+Breakpoint 1, main (argc=1, argv=0x7fffffffde88) at c1.c:9
+9	    a[i] = i;
+(gdb) print a
+$3 = (int *) 0x5555555592a0
+(...)
+(gdb) continue
+Continuing.
+Breakpoint 1, main (argc=1, argv=0x7fffffffde88) at c1.c:9
+9	    a[i] = i;
+(gdb) print a
+$11 = (int *) 0x5555555592a0
+(gdb) continue
+Continuing.
+[Inferior 1 (process 10887) exited normally]
+
+
+Valgrind:
+==8325== Memcheck, a memory error detector
+==8325== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==8325== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==8325== Command: ./t
+==8325==
+==8325== Invalid write of size 4
+==8325==    at 0x1091B8: main (c1.c:9)
+==8325==  Address 0x4a9e068 is 0 bytes after a block of size 40 alloc'd
+==8325==    at 0x4848899: malloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==8325==    by 0x109185: main (c1.c:6)
+==8325==
+==8325==
+==8325== HEAP SUMMARY:
+==8325==     in use at exit: 0 bytes in 0 blocks
+==8325==   total heap usage: 1 allocs, 1 frees, 40 bytes allocated
+==8325==
+==8325== All heap blocks were freed -- no leaks are possible
+==8325==
+==8325== For lists of detected and suppressed errors, rerun with: -s
+==8325== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 0 from 0)
+
+invalid write of size 4 at main(c1.c:9) : houve uma tentativa de alocar um dado na memória além do bloco de memória permitido pelo array inicializado. O dado possuia 4 bytes, no contexto d programa, sendo um valor inteiro. 
+
+Assim o erro consiste em tentar alocar um espaço de memória a mais do que o ponteiro possui (10). O loop é inicializado 11 vezes (de 0 a 10) logo foram alocados 11 inteiros no array, o que não é permitido e foi detectado como um erro no valgrind. Ainda assim, esse bug não afetou o funcionamento do programa: ao compila-lo e inicializa-lo com o gdb, foi colocado um breakpoint dentro do for, no passo em que é alocado um inteiro ao array, e depois printar o valor de a, ou seja, o endereço da memoria alocada. Esse processo foi realizado 11 vezes, até o loop acabar. A expectativa era que, na 11 tentativa, ao printar o valor de a, surgiria algum problema, porem o endereço printado foi o mesmo e o programa finalizou normalmente. Esse erro pode ser corrigido modificando o loop for para que a variável i vá até 9, e não 10.
+
+Após a correção realizada:
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./a...
+(gdb) run
+
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[Inferior 1 (process 12735) exited normally]
+
+
+
+==12739== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==12739== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==12739== Command: ./a
+==12739== 
+==12739== 
+==12739== HEAP SUMMARY:
+==12739==     in use at exit: 0 bytes in 0 blocks
+==12739==   total heap usage: 1 allocs, 1 frees, 40 bytes allocated
+==12739== 
+==12739== All heap blocks were freed -- no leaks are possible
+==12739== 
+==12739== For lists of detected and suppressed errors, rerun with: -s
+==12739== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+

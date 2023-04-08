@@ -1,0 +1,84 @@
+GDB inicial:
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./a...
+(gdb) break 18
+
+(gdb) break 21
+
+(gdb) run
+
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+
+Program received signal SIGSEGV, Segmentation fault.
+0x000055555555517a in main () at c4.c:13
+13	rotation3D->rows=4;
+
+
+Program terminated with signal SIGSEGV, Segmentation fault.
+The program no longer exists.
+
+
+
+==7540== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==7540== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==7540== Command: ./a
+==7540== 
+==7540== Use of uninitialised value of size 8
+==7540==    at 0x10917A: main (c4.c:13)
+==7540== 
+==7540== Invalid write of size 4
+==7540==    at 0x10917A: main (c4.c:13)
+==7540==  Address 0x0 is not stack'd, malloc'd or (recently) free'd
+==7540== 
+==7540== 
+==7540== Process terminating with default action of signal 11 (SIGSEGV)
+==7540==  Access not within mapped region at address 0x0
+==7540==    at 0x10917A: main (c4.c:13)
+==7540==  If you believe this happened as a result of a stack
+==7540==  overflow in your program's main thread (unlikely but
+==7540==  possible), you can try to increase the size of the
+==7540==  main thread stack using the --main-stacksize= flag.
+==7540==  The main thread stack size used in this run was 8388608.
+==7540== 
+==7540== HEAP SUMMARY:
+==7540==     in use at exit: 0 bytes in 0 blocks
+==7540==   total heap usage: 0 allocs, 0 frees, 0 bytes allocated
+==7540== 
+==7540== All heap blocks were freed -- no leaks are possible
+==7540== 
+==7540== Use --track-origins=yes to see where uninitialised values come from
+==7540== For lists of detected and suppressed errors, rerun with: -s
+==7540== ERROR SUMMARY: 2 errors from 2 contexts (suppressed: 0 from 0)
+Falha de segmentação (imagem do núcleo gravada)
+
+
+Ao analisar o código no gdb, foram inseridos breakpoints de forma a identificar o comportamento da memório ao percurso do programa. Porém, logo foi alertado uma falha de segmentação de memória, complementado pelo valgrind: não foi alocada memória para a variável Rotation3D, sendo um valor não inicializado. Assim, na linha 13, ao tentar acessar um atributo de Rotation3D e alocar um valor a ele, ocorrerá uma falha de segmentação, uma vez que a variável (sendo uma struct) não foi alocada dinamicamente na memória. Além disso, há alguns outros possíveis erros no código: a struct Matriz ROtation 3D foi declarada 2 vezes, uma dentro do main e outra como variável global, o que não é necessário; a variável "text" foi declarada sem atribuição de valor, mas não houve alocação de caracteres à ela, e mesmo assim sua memória foi desalocada ao fim do programa, mesmo não havendo nenhum valor a ser liberado; e a desalocação dos dados das linhas foi realizada apenas uam vez, quando deveria ser desalocado todos os valores anteriomente alocados, em outro for. Realizando tais correções no código:
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./a...
+
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[Inferior 1 (process 8518) exited normally]
+
+
+
+==8521== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==8521== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==8521== Command: ./a
+==8521== 
+==8521== 
+==8521== HEAP SUMMARY:
+==8521==     in use at exit: 0 bytes in 0 blocks
+==8521==   total heap usage: 6 allocs, 6 frees, 112 bytes allocated
+==8521== 
+==8521== All heap blocks were freed -- no leaks are possible
+==8521== 
+==8521== For lists of detected and suppressed errors, rerun with: -s
+==8521== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+(base) giovana@giovana-Aspire-E5-571:~/ed/pa03/c4$ exit
+
+

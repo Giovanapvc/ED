@@ -1,0 +1,62 @@
+GDB inicial:
+Breakpoint 1, main () at c7.c:10
+10	    *(alphabet + 26) = '\0'; //null-terminate the string?
+(gdb) print *alphabet
+$1 = 65 'A'
+(gdb) continue
+Continuing.
+[Inferior 1 (process 14094) exited normally]
+(gdb) quit
+
+Valgrind inicial:
+==14111== Memcheck, a memory error detector
+==14111== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==14111== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==14111== Command: ./a
+==14111== 
+==14111== Invalid write of size 1
+==14111==    at 0x1091BC: main (c7.c:10)
+==14111==  Address 0x4a9e05a is 0 bytes after a block of size 26 alloc'd
+==14111==    at 0x484DA83: calloc (in /usr/libexec/valgrind/vgpreload_memcheck-amd64-linux.so)
+==14111==    by 0x109183: main (c7.c:5)
+==14111== 
+==14111== 
+==14111== HEAP SUMMARY:
+==14111==     in use at exit: 0 bytes in 0 blocks
+==14111==   total heap usage: 1 allocs, 1 frees, 26 bytes allocated
+==14111== 
+==14111== All heap blocks were freed -- no leaks are possible
+==14111== 
+==14111== For lists of detected and suppressed errors, rerun with: -s
+==14111== ERROR SUMMARY: 1 errors from 1 contexts (suppressed: 0 from 0)
+
+O programa apresenta um pequeno erro, ele executa normalmente no GDB porém essa falha é detectada no Valgrind, que indica uma escrita iválida de tamamnho 1: sendo "alphabet" um arranjo de caracteres que possui 26 espaços de memória alocados(de 0-25), a linha "*(alphabet + 26) = '\0';" causará um erro no programa, uma vez que faz com que um zero seja escrito após o último espaço de memória alocado em Alphabet, o espaço 26, excedendo o tamanho da memória alocada anteriormente. Para correção, basta trocar 26 por 25, assim o último espaço de memória permitido será alocado pelo zero normamlmente: 
+
+==14212== Memcheck, a memory error detector
+==14212== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==14212== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==14212== Command: ./a
+==14212== 
+==14212== 
+==14212== HEAP SUMMARY:
+==14212==     in use at exit: 0 bytes in 0 blocks
+==14212==   total heap usage: 1 allocs, 1 frees, 26 bytes allocated
+==14212== 
+==14212== All heap blocks were freed -- no leaks are possible
+==14212== 
+==14212== For lists of detected and suppressed errors, rerun with: -s
+==14212== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+
+
+For help, type "help".
+Type "apropos word" to search for commands related to "word"...
+Reading symbols from ./a...
+(gdb) run
+
+[Thread debugging using libthread_db enabled]
+Using host libthread_db library "/lib/x86_64-linux-gnu/libthread_db.so.1".
+[Inferior 1 (process 14219) exited normally]
+(gdb) 
+
+
+
